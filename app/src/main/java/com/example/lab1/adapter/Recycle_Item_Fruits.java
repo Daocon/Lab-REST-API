@@ -31,17 +31,23 @@ import retrofit2.Callback;
 
 public class Recycle_Item_Fruits extends RecyclerView.Adapter<Recycle_Item_Fruits.UserViewHolder>
 {
-    private final ArrayList<Fruit> dsFruits;
+    private final ArrayList<Fruit> list;
     private Context context;
     private HttpRequest httpRequest;
     private Fruit fruit;
-    public Recycle_Item_Fruits(Context context, ArrayList<Fruit> dsFruits)
+
+    private FruitClick fruitClick;
+    public Recycle_Item_Fruits(Context context, ArrayList<Fruit> list,FruitClick fruitClick)
     {
         this.context = context;
-        this.dsFruits = dsFruits;
-        this.httpRequest = new HttpRequest();
+        this.list = list;
+        this.fruitClick = fruitClick;
     }
 
+    public interface FruitClick {
+        void delete(Fruit fruit);
+        void edit(Fruit fruit);
+    }
 
     @NonNull
     @Override
@@ -52,28 +58,29 @@ public class Recycle_Item_Fruits extends RecyclerView.Adapter<Recycle_Item_Fruit
 
     @Override
     public void onBindViewHolder(@NonNull UserViewHolder holder, int position) {
-        fruit = dsFruits.get(position);
+        fruit = list.get(position);
         if (fruit == null)
         {
             return;
         }
-        holder.tv_Id.setText(fruit.get_id());
         holder.tv_name.setText(fruit.getName());
         holder.tv_quantity.setText(fruit.getQuantity());
         holder.tv_price.setText(fruit.getPrice());
-        holder.tv_status.setText(fruit.getStatus());
         holder.tv_description.setText(fruit.getDescription());
-        holder.tv_distributor.setText(fruit.getDistributor().getName());
-//        Toast.makeText(context, "name: "+fruit, Toast.LENGTH_SHORT).show();
-        Glide.with(context)
-                .load(dsFruits.get(position).getImage().get(0)) // load file hinh
-                .thumbnail(Glide.with(context).load(R.drawable.loading)) // load hinh loading
-                .into(holder.iv_fruit);
-
+        if (!fruit.getImage().isEmpty()) { // Kiểm tra danh sách hình ảnh không rỗng
+            String url = fruit.getImage().get(0);
+            String newUrl = url.replace("localhost", "10.0.2.2");
+            Glide.with(context)
+                    .load(newUrl)
+                    .thumbnail(Glide.with(context).load(R.drawable.loading))
+                    .into(holder.iv_fruit);
+        }
 
         holder.btnDelete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                fruitClick.delete(fruit);
+                list.remove(fruit);
 //                Toast.makeText(context, "id"+dsdistributors.get(position), Toast.LENGTH_SHORT).show();
             }
         });
@@ -90,9 +97,9 @@ public class Recycle_Item_Fruits extends RecyclerView.Adapter<Recycle_Item_Fruit
 
     @Override
     public int getItemCount() {
-        if (dsFruits != null)
+        if (list != null)
         {
-            return dsFruits.size();
+            return list.size();
         }
         return 0;
     }
